@@ -1,0 +1,13 @@
+{
+    "app_list_ip": "0.0.0.0",
+    "app_port": 8000,
+    "app_admin_user": "admin",
+    "app_admin_password": "admin",
+    "app_auth_realm": "Please log in.",
+    "pg_host": "database",
+    "pg_port": 5432,
+    "pg_user": "mwhdbadmin",
+    "pg_password": "mwh_db_admin_password",
+    "pg_database": "mwhdata",
+    "pg_max_con": 32
+}
