@@ -1,19 +1,6 @@
 
 BEGIN;
 
-CREATE TABLE directors (
-    id SERIAL,
-    name VARCHAR(64) NOT NULL,
-    PRIMARY KEY (id)
-);
-INSERT INTO directors (name) VALUES
-    ('Quentin Tarantino'),
-    ('Stanley Kubrick'),
-    ('Guy Ritchie'),
-    ('Robert Rodriguez'),
-    ('Frank Miller')
-;
-
 CREATE TABLE films (
     id SERIAL,
     name VARCHAR(64) NOT NULL,
@@ -28,24 +15,5 @@ INSERT INTO films (name, description) VALUES
     ('Snatch', 'Snatch is a 2000 British crime comedy film written and directed by Guy Ritchie, featuring an ensemble cast. Set in the London criminal underworld, the film contains two intertwined plots: one dealing with the search for a stolen diamond, the other with a small-time boxing promoter (Jason Statham) who finds himself under the thumb of a ruthless gangster (Alan Ford) who is ready and willing to have his subordinates carry out severe and sadistic acts of violence.'),
     ('Sin City', 'Much of the film is based on the first, third, and fourth books in Miller`s original comic series. The Hard Goodbye is about a man who embarks on a brutal rampage in search of his one-time sweetheart`s killer, killing anyone, even the police, that gets in his way of finding and killing her murderer. The Big Fat Kill focuses on an everyman getting caught in a street war between a group of prostitutes and a group of mercenaries, the police and the mob. That Yellow Bastard follows an aging police officer who protects a young woman from a grotesquely disfigured serial killer. The intro and outro of the film are based on the short story "The Customer is Always Right" which is collected in Booze, Broads & Bullets, the sixth book in the comic series.')
 ;
-
-CREATE TABLE dof (
-    id SERIAL,
-    fid INTEGER NOT NULL,
-    did INTEGER NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (fid)
-        REFERENCES films (id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    FOREIGN KEY (did)
-        REFERENCES directors (id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-INSERT INTO dof (fid, did) VALUES
-    (1, 1), (2, 2), (3, 3),
-    (4, 1), (4, 4), (5, 3),
-    (6, 1), (6, 4), (5, 5);
 
 COMMIT;

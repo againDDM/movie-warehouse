@@ -26,7 +26,7 @@ type Director struct {
 func getFilms(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	films := []*Film{}
-	rows, err := db.Query("SELECT id, name, description FROM films")
+	rows, err := db.Query("SELECT id, name, description FROM films ORDER BY id")
 	defer rows.Close()
 	if err != nil {
 		log.Printf("Fail to get films from database :: %v /n", err)
@@ -83,12 +83,24 @@ func addFilm(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err = db.Exec("INSERT INTO films (name, description) VALUES($1, $2)",
+	if film.Name == "" && film.Description == "" {
+		log.Println("Empty insert")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	result, err := db.Exec("INSERT INTO films (name, description) VALUES($1, $2)",
 		film.Name, film.Description)
 	if err != nil {
 		log.Printf("Fail to add film to database :: %v /n", err)
 		http.Error(w, "Internal server error", 500)
+		return
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("Query error :: %v /n", err)
+		http.Error(w, "Internal server error", 500)
 	} else {
+		log.Printf("Added %v film(s) to database/n", rowsAffected)
 		w.WriteHeader(http.StatusCreated)
 	}
 }
@@ -102,15 +114,20 @@ func deleteFilm(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	aff, err := db.Exec("DELETE FROM films WHERE id=$1", targetID)
-	switch {
-	case err != nil:
+	result, err := db.Exec("DELETE FROM films WHERE id=$1", targetID)
+	if err != nil {
 		log.Printf("Fail to delete film from database :: %v /n", err)
 		http.Error(w, "Internal server error", 500)
-	case aff == nil:
-		log.Println("Nothing to delete")
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("Query error :: %v /n", err)
+		http.Error(w, "Internal server error", 500)
+	} else if rowsAffected == 0 {
+		log.Println("Nothing to delete from database")
 		w.WriteHeader(http.StatusNotFound)
-	default:
+	} else {
+		log.Printf("Deleted %v film(s) from database/n", rowsAffected)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -131,16 +148,38 @@ func updateFilm(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	aff, err := db.Exec("UPDATE films  SET name=$1, description=$2 WHERE id=$3",
-		film.Name, film.Description, targetID)
+	var result sql.Result
 	switch {
-	case err != nil:
+	case film.Name == "" && film.Description == "":
+		log.Println("Empty update")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case film.Name == "":
+		result, err = db.Exec("UPDATE films  SET description=$1 WHERE id=$2",
+			film.Description, targetID)
+	case film.Description == "":
+		result, err = db.Exec("UPDATE films  SET name=$1 WHERE id=$2",
+			film.Name, targetID)
+	default:
+		result, err = db.Exec("UPDATE films  SET name=$1, description=$2 WHERE id=$3",
+			film.Name, film.Description, targetID)
+	}
+	if err != nil {
 		log.Printf("Fail to update film in database :: %v /n", err)
 		http.Error(w, "Internal server error", 500)
-	case aff == nil:
-		log.Println("Nothing to update")
+		return
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("Query error :: %v /n", err)
+		http.Error(w, "Internal server error", 500)
+		return
+	} else if rowsAffected == 0 {
+		log.Println("Nothing to update in database")
 		w.WriteHeader(http.StatusNotFound)
-	default:
-		w.WriteHeader(http.StatusNoContent)
+		return
+	} else {
+		log.Printf("Updated %v film(s) from database/n", rowsAffected)
+		w.WriteHeader(http.StatusAccepted)
 	}
 }
