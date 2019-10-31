@@ -1,4 +1,4 @@
-FROM golang:latest as go_builder
+FROM golang:1.13-stretch as go_builder
 WORKDIR /go/src/mvh
 ARG build_dir="/opt/mvh_build"
 
@@ -9,7 +9,7 @@ ADD ./go_application/* ./
 RUN go build -o /go/bin/mvh mvh
 
 
-FROM debian:stable-slim
+FROM debian:10-slim
 LABEL mainteiner="Vasiliy Badaev <againDDM@gmail.com>"
 ARG app_dir="/opt/mvh"
 WORKDIR $app_dir
