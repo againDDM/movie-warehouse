@@ -1,6 +1,5 @@
 FROM golang:1.13-stretch as go_builder
 WORKDIR /go/src/mvh
-ARG build_dir="/opt/mvh_build"
 
 RUN go get github.com/lib/pq \
            github.com/gorilla/mux
