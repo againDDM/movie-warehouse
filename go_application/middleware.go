@@ -3,11 +3,11 @@ package main
 import (
 	"crypto/subtle"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -50,18 +50,17 @@ func panicMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-	router := mux.NewRouter()
-	router.HandleFunc("/films", getFilms).Methods("GET")
-	router.HandleFunc("/films/{id}", getFilm).Methods("GET")
-	router.HandleFunc("/films", addFilm).Methods("POST")
-	router.HandleFunc("/films/{id}", updateFilm).Methods("PUT")
-	router.HandleFunc("/films/{id}", deleteFilm).Methods("DELETE")
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	siteHandler := authMiddleware(router)
-	siteHandler = accessLogMiddleware(siteHandler)
-	siteHandler = panicMiddleware(siteHandler)
+	r.Get("/ping", ping)
+	r.Get("/films", getFilms)
+	r.Get("/films/{id}", getFilm)
+	r.Post("/films", addFilm)
+	r.Put("/films/{id}", updateFilm)
+	r.Delete("/films/{id}", deleteFilm)
 
 	log.Println("Start server")
 	serverString := fmt.Sprintf("%v:%v", Config.AppListIP, Config.AppPort)
-	log.Fatal(http.ListenAndServe(serverString, siteHandler))
+	log.Fatal(http.ListenAndServe(serverString, panicMiddleware(accessLogMiddleware(authMiddleware(r)))))
 }

@@ -3,11 +3,10 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 // Film is a data structure for marshaling convenience.
@@ -48,8 +47,8 @@ func getFilms(w http.ResponseWriter, r *http.Request) {
 
 func getFilm(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	targetID, err := strconv.Atoi(params["id"])
+	strID := chi.URLParam(r, "id")
+	targetID, err := strconv.Atoi(strID)
 	if err != nil {
 		log.Println("Invalid ID")
 		w.WriteHeader(http.StatusNotFound)
@@ -107,8 +106,8 @@ func addFilm(w http.ResponseWriter, r *http.Request) {
 
 func deleteFilm(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	targetID, err := strconv.Atoi(params["id"])
+	strID := chi.URLParam(r, "id")
+	targetID, err := strconv.Atoi(strID)
 	if err != nil {
 		log.Println("Invalid ID")
 		w.WriteHeader(http.StatusBadRequest)
@@ -134,8 +133,8 @@ func deleteFilm(w http.ResponseWriter, r *http.Request) {
 
 func updateFilm(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	targetID, err := strconv.Atoi(params["id"])
+	strID := chi.URLParam(r, "id")
+	targetID, err := strconv.Atoi(strID)
 	if err != nil {
 		log.Println("Invalid ID")
 		w.WriteHeader(http.StatusBadRequest)
@@ -182,4 +181,9 @@ func updateFilm(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Updated %v film(s) from database/n", rowsAffected)
 		w.WriteHeader(http.StatusAccepted)
 	}
+}
+
+func ping(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("pong\n"))
+	w.WriteHeader(http.StatusOK)
 }

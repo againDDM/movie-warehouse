@@ -1,0 +1,67 @@
+version: "2.4"
+
+services:
+  app:
+    image: "mwh-backend:latest"
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+      target: production
+    restart: unless-stopped
+    user: nobody
+    container_name: mwh_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    links:
+      - "db:database"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - mwh-internal
+
+  db:
+    image: "postgres:12"
+    container_name: mwh-database
+    restart: unless-stopped
+    user: postgres
+    healthcheck:
+      test: ["CMD", "psql", "-d", "mwhdata", "-U", "mwhdbadmin", "-c", "SELECT 1;"]
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 20s
+    command:
+      - "postgres"
+      - "-c"
+      - "log_statement=all"
+      - "-c"
+      - 'max_connections=200'
+    volumes:
+      - "../database/init:/docker-entrypoint-initdb.d:ro"
+      - "mwh-pgdata:/var/lib/postgresql/data"
+    env_file:
+      - "../config/.env.develop"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - mwh-internal
+
+networks:
+  mwh-internal:
+    driver: bridge
+    name: mwh-internal
+    external: false
+
+volumes:
+  mwh-pgdata:
+    driver: local
+    external: false
+    name: mwh-pgdata
