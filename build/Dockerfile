@@ -4,14 +4,15 @@ ENV GOSUMDB="off" \
 WORKDIR "/build"
 COPY go.mod go.sum ./
 RUN go mod download -x
-ADD ./go_application/* ./
-RUN go build -mod readonly -o server \
+COPY . .
+RUN go build -mod readonly -o server ./cmd/*.go \
     && chmod +x server
 
 FROM busybox:stable as production
 USER nobody
 WORKDIR "/opt/app"
-EXPOSE 8080
+EXPOSE 8000
 ADD config/mwh-config.json .
 COPY --from=go_builder /build/server .
-CMD ["./server", "-config=mwh-config.json"]
+CMD ["./server", "runserver"]
+HEALTHCHECK --interval=5s --timeout=2s --retries=1 CMD ./server ping
